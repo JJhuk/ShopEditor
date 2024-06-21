@@ -3,7 +3,7 @@ using ShopEditor.Entity;
 
 namespace ShopEditor;
 
-public sealed record ShopItem(uint ShopItemId, uint ShopId, int ItemId, int Price, int Position);
+public sealed record ShopItem(uint ShopId, int ItemId, int Price);
 
 public sealed class ShopItemManager(ShopDbContext shopDbContext)
 {
@@ -11,8 +11,11 @@ public sealed class ShopItemManager(ShopDbContext shopDbContext)
     
     private async Task<int> GetHighestPosition(uint shopId, CancellationToken cancellationToken = default)
     {
-        // ref ShopItem comment
-        const int defaultPosition = 100;
+        // sort is an arbitrary field designed to give leeway when modifying shops.
+        // The lowest number is 104, and it increments by 4 for each item
+        // to allow decent space for swapping/inserting/removing items.
+        const int defaultPosition = 104;
+        
         return await shopDbContext.ShopItems
             .Where(shopItem => shopItem.ShopId == shopId)
             .Select(shopItem => shopItem.Position)
@@ -20,18 +23,21 @@ public sealed class ShopItemManager(ShopDbContext shopDbContext)
             .MaxAsync(cancellationToken);
     }
     
-    public async Task InsertShopItem(ShopItem shopItem)
+    public async Task InsertShopItemList(List<ShopItem> shopItemToInsert)
     {
-        var highestPosition = await GetHighestPosition(shopItem.ShopId);
+        var highestPosition = await GetHighestPosition(shopItemToInsert.First().ShopId);
 
-        await shopDbContext.AddAsync(new DbShopItem
-        {
-            ItemId = shopItem.ItemId,
-            Position = highestPosition + ShopPositionOffset,
-            Price = shopItem.Price,
-            ShopId = shopItem.ShopId,
-        });
+        var dbShopItemList = shopItemToInsert
+            .Select((shopItem, index) => new DbShopItem
+            {
+                ItemId = shopItem.ItemId,
+                Position = highestPosition + ShopPositionOffset * index,
+                Price = shopItem.Price,
+                ShopId = shopItem.ShopId,
+            })
+            .ToList();
 
+        await shopDbContext.AddRangeAsync(dbShopItemList);
         await shopDbContext.SaveChangesAsync();
     }
 }

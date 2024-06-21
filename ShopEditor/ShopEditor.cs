@@ -1,21 +1,25 @@
 ﻿namespace ShopEditor;
 
-public class ShopEditor
+public class ShopEditor(ShopItemManager shopItemManager)
 {
-    private readonly ShopItemManager shopItemManager;
-
-    public ShopEditor(ShopItemManager shopItemManager)
-    {
-        this.shopItemManager = shopItemManager;
-    }
-
-    public async Task Run(CancellationToken token)
+    public async Task RunCore(CancellationToken token)
     {
         Console.Write("Enter ShopId : ");
         var shopIdStr = await Console.In.ReadLineAsync(token);
-        var shopId = int.Parse(shopIdStr!);
+        var shopId = uint.Parse(shopIdStr!);
         Console.Write("Enter itemId. ex) 101, 102 or 101 :");
         var itemIdList = await ParseFromStdIn(token);
+        
+        Console.Write("Enter Price : ");
+        var priceStr = await Console.In.ReadLineAsync(token);
+        var price = int.Parse(priceStr!);
+        
+        var shopItemList = itemIdList
+            .Select(itemId => new ShopItem(shopId, itemId, price))
+            .ToList();
+        
+        await shopItemManager.InsertShopItemList(shopItemList);
+        Console.WriteLine("Insert Done");
     }
     
     private static async Task<List<int>> ParseFromStdIn(CancellationToken token)
