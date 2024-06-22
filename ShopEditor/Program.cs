@@ -14,7 +14,7 @@ var configurationBuilder = new ConfigurationBuilder()
 var serviceCollections = new ServiceCollection()
     .AddDbContext<ShopDbContext>(config =>
     {
-        config.UseMySQL(configurationBuilder.GetConnectionString("ConnectionString")!);
+        config.UseMySQL(configurationBuilder.GetConnectionString("DefaultConnection")!);
     })
     .AddSingleton<ShopItemManager>()
     .AddSingleton<ShopEditor.ShopEditor>()

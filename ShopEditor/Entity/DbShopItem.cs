@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ShopEditor.Entity;
 
+[Table("shopitems")]
 public class DbShopItem
 {
     public uint ShopItemId { get; set; }
